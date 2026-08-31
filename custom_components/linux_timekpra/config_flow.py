@@ -30,6 +30,7 @@ from .const import (
     CONF_SSH_USER,
     DEFAULT_COMMAND_PATH,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SSH_KEY_PATH,
     DOMAIN,
 )
 
@@ -65,7 +66,9 @@ class TimekpraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_SSH_USER): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
-                vol.Required(CONF_SSH_KEY_PATH): TextSelector(
+                vol.Required(
+                    CONF_SSH_KEY_PATH, default=DEFAULT_SSH_KEY_PATH
+                ): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
                 vol.Required(CONF_SSH_PORT, default=22): NumberSelector(
@@ -113,46 +116,11 @@ class TimekpraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }),
         )
 
-    @staticmethod
-    async def _async_validate_connection(config: dict[str, Any]) -> bool:
-        """Validate SSH connection."""
-        try:
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-            # Load key
-            key_path = Path(config[CONF_SSH_KEY_PATH])
-            if not key_path.exists():
-                _LOGGER.error("SSH key file not found: %s", config[CONF_SSH_KEY_PATH])
-                return False
-
-            try:
-                # Try Ed25519 key first
-                key = Ed25519Key.from_private_key_file(str(key_path))
-            except Exception:
-                try:
-                    # Fall back to RSA
-                    key = RSAKey.from_private_key_file(str(key_path))
-                except Exception as err:
-                    _LOGGER.error("Failed to load SSH key: %s", err)
-                    return False
-
-            # Connect
-            ssh_client.connect(
-                hostname=config[CONF_SSH_HOST],
-                port=config[CONF_SSH_PORT],
-                username=config[CONF_SSH_USER],
-                pkey=key,
-                timeout=10,
-            )
-
-            ssh_client.close()
-            _LOGGER.debug("SSH connection validation successful")
-            return True
-
-        except Exception as err:
-            _LOGGER.error("SSH connection validation failed: %s", err)
-            return False
+    async def _async_validate_connection(self, config: dict[str, Any]) -> bool:
+        """Validate SSH connection without blocking the event loop."""
+        return await self.hass.async_add_executor_job(
+            _validate_connection, config
+        )
 
     @staticmethod
     @callback
@@ -162,6 +130,41 @@ class TimekpraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get options flow."""
         return TimekpraOptionsFlow(config_entry)
 
+
+def _validate_connection(config: dict[str, Any]) -> bool:
+    """Validate an SSH connection in a worker thread."""
+    ssh_client = paramiko.SSHClient()
+    try:
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        key_path = Path(str(config[CONF_SSH_KEY_PATH])).expanduser()
+        if not key_path.exists():
+            _LOGGER.error("SSH key file not found: %s", key_path)
+            return False
+
+        try:
+            key = Ed25519Key.from_private_key_file(str(key_path))
+        except Exception:
+            try:
+                key = RSAKey.from_private_key_file(str(key_path))
+            except Exception as err:
+                _LOGGER.error("Failed to load SSH key: %s", err)
+                return False
+
+        ssh_client.connect(
+            hostname=str(config[CONF_SSH_HOST]),
+            port=int(config.get(CONF_SSH_PORT) or 22),
+            username=str(config[CONF_SSH_USER]),
+            pkey=key,
+            timeout=10,
+        )
+        _LOGGER.debug("SSH connection validation successful")
+        return True
+    except Exception as err:
+        _LOGGER.error("SSH connection validation failed: %s", err)
+        return False
+    finally:
+        ssh_client.close()
 
 class TimekpraOptionsFlow(config_entries.OptionsFlow):
     """Options flow for Linux Timekpra."""

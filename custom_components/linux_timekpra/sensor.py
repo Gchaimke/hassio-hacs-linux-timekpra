@@ -72,13 +72,13 @@ class TimekpraTimeSpentDaySensor(TimekpraEntity, SensorEntity):
         super().__init__(controller, entry_id)
         self._attr_name = "Timekpra Time Spent Today"
         self._attr_icon = "mdi:clock"
-        self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
+        self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
         self._attr_device_class = SensorDeviceClass.DURATION
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
-    def state(self) -> int | None:
-        """Return state in seconds."""
+    def native_value(self) -> int | None:
+        """Return duration in minutes."""
         return self.controller.data.get(ATTR_TIME_SPENT_DAY)
 
     @property
@@ -95,13 +95,13 @@ class TimekpraTimeLeftDaySensor(TimekpraEntity, SensorEntity):
         super().__init__(controller, entry_id)
         self._attr_name = "Timekpra Time Left Today"
         self._attr_icon = "mdi:clock-outline"
-        self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
+        self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
         self._attr_device_class = SensorDeviceClass.DURATION
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
-    def state(self) -> int | None:
-        """Return state in seconds."""
+    def native_value(self) -> int | None:
+        """Return duration in minutes."""
         return self.controller.data.get(ATTR_TIME_LEFT_DAY)
 
     @property
@@ -118,13 +118,13 @@ class TimekpraTimeSpentWeekSensor(TimekpraEntity, SensorEntity):
         super().__init__(controller, entry_id)
         self._attr_name = "Timekpra Time Spent This Week"
         self._attr_icon = "mdi:calendar-week"
-        self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
+        self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
         self._attr_device_class = SensorDeviceClass.DURATION
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
-    def state(self) -> int | None:
-        """Return state in seconds."""
+    def native_value(self) -> int | None:
+        """Return duration in minutes."""
         return self.controller.data.get(ATTR_TIME_SPENT_WEEK)
 
     @property
@@ -141,13 +141,13 @@ class TimekpraTimeSpentMonthSensor(TimekpraEntity, SensorEntity):
         super().__init__(controller, entry_id)
         self._attr_name = "Timekpra Time Spent This Month"
         self._attr_icon = "mdi:calendar-month"
-        self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
+        self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
         self._attr_device_class = SensorDeviceClass.DURATION
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
-    def state(self) -> int | None:
-        """Return state in seconds."""
+    def native_value(self) -> int | None:
+        """Return duration in minutes."""
         return self.controller.data.get(ATTR_TIME_SPENT_MONTH)
 
     @property

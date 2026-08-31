@@ -46,7 +46,7 @@ A Home Assistant custom integration for managing screen time on Linux PCs using 
 3. Fill in the SSH connection details:
   - **SSH Host Address**: IP or hostname of your Linux PC (e.g., `192.0.2.10` or `pc.local`)
    - **SSH Username**: User account for SSH connection (e.g., `ha-control`)
-   - **SSH Private Key Path**: Path to your private key in Home Assistant (e.g., `/config/.ssh/id_ed25519`)
+  - **SSH Private Key Path**: Path to your private key in Home Assistant (default: `/config/.ssh/id_ed25519`)
    - **SSH Port**: Usually `22` (default)
 
 4. (Optional) Configure advanced settings:
@@ -93,6 +93,20 @@ scp custom_components/linux_timekpra/ha_timekpra/* user@host:/tmp/ha_timekpra/
 ssh user@host 'sudo install -d -o root -g root -m 0755 /usr/local/bin/ha_timekpra && sudo install -o root -g root -m 0755 /tmp/ha_timekpra/* /usr/local/bin/ha_timekpra/'
 ```
 
+If the scripts were copied from Windows and `sudo ./child-json` reports
+`No such file or directory`, convert the existing files to Unix line endings
+and restore their executable permissions:
+
+```bash
+cd /usr/local/bin/ha_timekpra
+sudo sed -i 's/\r$//' child-json child-add-time child-block child-status
+sudo chmod 0755 child-json child-add-time child-block child-status
+sudo ./child-json
+```
+
+Do not use `install` with the same source and destination path to fix this
+problem; it leaves the existing file unchanged.
+
 The scripts use the `TIMEKPR_USER` environment variable to select the monitored
 Linux account. The default is `child`; replace it with the actual account name
 when testing or configure it in each script on the Linux PC:
@@ -115,15 +129,16 @@ sudo /usr/local/bin/ha_timekpra/child-block
 sudo /usr/local/bin/ha_timekpra/child-status
 ```
 
-`child-json` must return these fields. Time values are measured in seconds:
+`child-json` returns these fields in minutes. The adapter converts the seconds
+reported by Timekpr-Next into whole minutes:
 
 ```json
 {
   "user": "username",
-  "time_spent_day": 3600,
-  "time_left_day": 7200,
-  "time_spent_week": 25200,
-  "time_spent_month": 108000
+  "time_spent_day": 60,
+  "time_left_day": 120,
+  "time_spent_week": 420,
+  "time_spent_month": 1800
 }
 ```
 
@@ -131,11 +146,12 @@ sudo /usr/local/bin/ha_timekpra/child-status
 
 ### Sensors (Read-only)
 
+- Duration values are returned and displayed in minutes. Convert them to seconds in an automation when second-level precision is required.
 - **Timekpra User** - Currently monitored user
-- **Timekpra Time Left Today** - Remaining screen time for today (in seconds)
-- **Timekpra Time Spent Today** - Screen time used today (in seconds)
-- **Timekpra Time Spent This Week** - Total screen time this week (in seconds)
-- **Timekpra Time Spent This Month** - Total screen time this month (in seconds)
+- **Timekpra Time Left Today** - Remaining screen time for today (in minutes)
+- **Timekpra Time Spent Today** - Screen time used today (in minutes)
+- **Timekpra Time Spent This Week** - Total screen time this week (in minutes)
+- **Timekpra Time Spent This Month** - Total screen time this month (in minutes)
 
 ### Controls
 

@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from ..config_flow import TimekpraConfigFlow
+from ..config_flow import TimekpraConfigFlow, _validate_connection
 from ..const import (
     CONF_COMMAND_PATH,
     CONF_SCAN_INTERVAL,
@@ -58,7 +58,7 @@ async def test_validate_connection_success(config_entry_data):
         mock_client = AsyncMock()
         mock_ssh_class.return_value = mock_client
 
-        result = await TimekpraConfigFlow._async_validate_connection(config_entry_data)
+        result = _validate_connection(config_entry_data)
 
         assert result is True
         mock_client.set_missing_host_key_policy.assert_called_once()
@@ -70,7 +70,7 @@ async def test_validate_connection_key_not_found(config_entry_data):
     """Test validation when key file is not found."""
     config_entry_data[CONF_SSH_KEY_PATH] = "/nonexistent/key"
 
-    result = await TimekpraConfigFlow._async_validate_connection(config_entry_data)
+    result = _validate_connection(config_entry_data)
 
     assert result is False
 
@@ -83,6 +83,6 @@ async def test_validate_connection_failure(config_entry_data):
         mock_client.connect.side_effect = Exception("Connection failed")
         mock_ssh_class.return_value = mock_client
 
-        result = await TimekpraConfigFlow._async_validate_connection(config_entry_data)
+        result = _validate_connection(config_entry_data)
 
         assert result is False

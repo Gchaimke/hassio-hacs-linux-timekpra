@@ -23,13 +23,21 @@ import sys
 
 user, day, left, week, month, play_left, play_spent, week_limit = sys.argv[1:]
 
+def seconds_to_minutes(value):
+    """Convert Timekpr-Next seconds to whole minutes."""
+    try:
+        return int(value or 0) // 60
+    except ValueError:
+        return 0
+
 print(json.dumps({
     "user": user,
-    "time_spent_day": int(day),
-    "time_left_day": int(left),
-    "time_spent_week": int(week),
-    "time_spent_month": int(month),
-    "playtime_left_day": int(play_left),
-    "playtime_spent_day": int(play_spent),
-    "limit_per_week": int(week_limit)
+    "time_spent_day": seconds_to_minutes(day),
+    "time_left_day": seconds_to_minutes(left),
+    "time_spent_week": seconds_to_minutes(week),
+    "time_spent_month": seconds_to_minutes(month),
+    "playtime_left_day": seconds_to_minutes(play_left),
+    "playtime_spent_day": seconds_to_minutes(play_spent),
+    "limit_per_week": seconds_to_minutes(week_limit)
 }))
+PY

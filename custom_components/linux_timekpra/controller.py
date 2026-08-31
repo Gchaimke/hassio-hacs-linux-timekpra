@@ -39,6 +39,52 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _connect_ssh(config: dict[str, Any]) -> paramiko.SSHClient | None:
+    """Create and connect an SSH client in a worker thread."""
+    ssh_client = paramiko.SSHClient()
+    try:
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        key_path = Path(str(config[CONF_SSH_KEY_PATH])).expanduser()
+        if not key_path.exists():
+            _LOGGER.error("SSH key file not found: %s", key_path)
+            return None
+
+        try:
+            key = Ed25519Key.from_private_key_file(str(key_path))
+        except Exception:
+            try:
+                key = RSAKey.from_private_key_file(str(key_path))
+            except Exception as err:
+                _LOGGER.error("Failed to load SSH key: %s", err)
+                return None
+
+        ssh_client.connect(
+            hostname=str(config[CONF_SSH_HOST]),
+            port=int(config.get(CONF_SSH_PORT) or 22),
+            username=str(config[CONF_SSH_USER]),
+            pkey=key,
+            timeout=10,
+        )
+        return ssh_client
+    except Exception as err:
+        _LOGGER.error("Failed to connect to SSH server: %s", err)
+        ssh_client.close()
+        return None
+
+
+def _execute_ssh_command(
+    ssh_client: paramiko.SSHClient,
+    command: str,
+) -> tuple[str, str]:
+    """Execute an SSH command and read its output in a worker thread."""
+    _, stdout, stderr = ssh_client.exec_command(command)
+    return (
+        stdout.read().decode().strip(),
+        stderr.read().decode().strip(),
+    )
+
+
 class TimekpraController:
     """Controller for managing Timekpra via SSH."""
 
@@ -64,22 +110,22 @@ class TimekpraController:
     @property
     def ssh_host(self) -> str:
         """Get SSH host."""
-        return self.config.get(CONF_SSH_HOST)
+        return str(self.config.get(CONF_SSH_HOST) or "")
 
     @property
     def ssh_user(self) -> str:
         """Get SSH user."""
-        return self.config.get(CONF_SSH_USER)
+        return str(self.config.get(CONF_SSH_USER) or "")
 
     @property
     def ssh_port(self) -> int:
         """Get SSH port."""
-        return self.config.get(CONF_SSH_PORT, 22)
+        return int(self.config.get(CONF_SSH_PORT) or 22)
 
     @property
     def ssh_key_path(self) -> str:
         """Get SSH key path."""
-        return self.config.get(CONF_SSH_KEY_PATH)
+        return str(self.config.get(CONF_SSH_KEY_PATH) or "")
 
     @property
     def scan_interval(self) -> int:
@@ -92,50 +138,21 @@ class TimekpraController:
         return self.config.get(CONF_COMMAND_PATH, DEFAULT_COMMAND_PATH)
 
     async def async_connect(self) -> bool:
-        """Connect to SSH server."""
-        try:
-            self._ssh_client = paramiko.SSHClient()
-            self._ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-            # Load key
-            key_path = Path(self.ssh_key_path)
-            if not key_path.exists():
-                _LOGGER.error("SSH key file not found: %s", self.ssh_key_path)
-                return False
-
-            try:
-                # Try Ed25519 key first
-                key = Ed25519Key.from_private_key_file(str(key_path))
-            except Exception:
-                try:
-                    # Fall back to RSA
-                    key = RSAKey.from_private_key_file(str(key_path))
-                except Exception as err:
-                    _LOGGER.error("Failed to load SSH key: %s", err)
-                    return False
-
-            # Connect
-            self._ssh_client.connect(
-                hostname=self.ssh_host,
-                port=self.ssh_port,
-                username=self.ssh_user,
-                pkey=key,
-                timeout=10,
-            )
-
-            self.is_connected = True
+        """Connect to SSH server without blocking the event loop."""
+        ssh_client = await self.hass.async_add_executor_job(
+            _connect_ssh,
+            self.config,
+        )
+        self._ssh_client = ssh_client
+        self.is_connected = ssh_client is not None
+        if self.is_connected:
             _LOGGER.debug("Connected to SSH server %s@%s", self.ssh_user, self.ssh_host)
-            return True
-
-        except Exception as err:
-            _LOGGER.error("Failed to connect to SSH server: %s", err)
-            self.is_connected = False
-            return False
+        return self.is_connected
 
     async def async_disconnect(self) -> None:
         """Disconnect from SSH server."""
         if self._ssh_client:
-            self._ssh_client.close()
+            await self.hass.async_add_executor_job(self._ssh_client.close)
         self.is_connected = False
 
     async def execute_command(self, command: str) -> str | None:
@@ -145,16 +162,15 @@ class TimekpraController:
             return None
 
         try:
-            stdin, stdout, stderr = self._ssh_client.exec_command(command)
-            output = stdout.read().decode().strip()
-            error = stderr.read().decode().strip()
-
+            output, error = await self.hass.async_add_executor_job(
+                _execute_ssh_command,
+                self._ssh_client,
+                command,
+            )
             if error:
                 _LOGGER.error("Command error: %s", error)
                 return None
-
             return output
-
         except Exception as err:
             _LOGGER.error("Failed to execute command: %s", err)
             self.is_connected = False

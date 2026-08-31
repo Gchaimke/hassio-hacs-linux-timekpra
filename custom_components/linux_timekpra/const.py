@@ -14,6 +14,7 @@ CONF_COMMAND_PATH = "command_path"
 
 # Defaults
 DEFAULT_SSH_PORT = 22
+DEFAULT_SSH_KEY_PATH = "/config/.ssh/id_ed25519"
 DEFAULT_SCAN_INTERVAL = 30
 DEFAULT_COMMAND_PATH = "/usr/local/bin/ha_timekpra"
 
