@@ -1,6 +1,6 @@
 # Linux Timekpra Integration
 
-A Home Assistant custom integration for managing screen time on Linux PCs using the Timekpra CLI tool via SSH.
+A Home Assistant custom integration for managing screen time on Linux PCs using the [Timekpr-Next](https://mjasnik.gitlab.io/timekpr-next/) CLI tool via SSH.
 
 ## Features
 
