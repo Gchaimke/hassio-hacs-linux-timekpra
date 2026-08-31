@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Use TIMEKPR_USER when provided; otherwise block the Linux user named child.
+TIMEKPR_USER="${TIMEKPR_USER:-child}"
+
+/usr/bin/timekpra --settimeleft "$TIMEKPR_USER" '=' 0

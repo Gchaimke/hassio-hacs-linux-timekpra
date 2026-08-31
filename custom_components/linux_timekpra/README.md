@@ -71,6 +71,62 @@ sudo chmod 600 /home/ha-control/.ssh/authorized_keys
 echo "ha-control ALL=(ALL) NOPASSWD: /usr/local/bin/ha_timekpra/*" | sudo tee /etc/sudoers.d/ha-timekpra
 ```
 
+### Install the command adapter scripts
+
+This integration calls four small adapter scripts on the Linux PC. They bridge
+the integration to the installed Timekpr-Next CLI:
+
+| Script | Required behavior |
+| --- | --- |
+| `child-json` | Print one valid JSON object containing the screen-time values listed below |
+| `child-add-time` | Accept the number of minutes as its first argument and add that time |
+| `child-block` | Block the monitored user's screen |
+| `child-status` | Print a short status message; optional for the integration |
+
+Copy the bundled adapter scripts to the remote PC and make them executable.
+Run this command from the repository root on a machine that can reach the
+Linux PC:
+
+```bash
+ssh user@host 'mkdir -p /tmp/ha_timekpra'
+scp custom_components/linux_timekpra/ha_timekpra/* user@host:/tmp/ha_timekpra/
+ssh user@host 'sudo install -d -o root -g root -m 0755 /usr/local/bin/ha_timekpra && sudo install -o root -g root -m 0755 /tmp/ha_timekpra/* /usr/local/bin/ha_timekpra/'
+```
+
+The scripts use the `TIMEKPR_USER` environment variable to select the monitored
+Linux account. The default is `child`; replace it with the actual account name
+when testing or configure it in each script on the Linux PC:
+
+```bash
+sudo sed -i 's/TIMEKPR_USER:-child/TIMEKPR_USER:-your-linux-user/g' /usr/local/bin/ha_timekpra/child-*
+```
+
+The scripts use the installed Timekpr-Next CLI. Check the official
+[Timekpr-Next documentation](https://mjasnik.gitlab.io/timekpr-next/) and run
+`sudo timekpra --help` on the Linux PC before using them.
+
+Test the required scripts locally on the Linux PC before configuring Home
+Assistant:
+
+```bash
+sudo /usr/local/bin/ha_timekpra/child-json
+sudo /usr/local/bin/ha_timekpra/child-add-time 15
+sudo /usr/local/bin/ha_timekpra/child-block
+sudo /usr/local/bin/ha_timekpra/child-status
+```
+
+`child-json` must return these fields. Time values are measured in seconds:
+
+```json
+{
+  "user": "username",
+  "time_spent_day": 3600,
+  "time_left_day": 7200,
+  "time_spent_week": 25200,
+  "time_spent_month": 108000
+}
+```
+
 ## Entities
 
 ### Sensors (Read-only)
@@ -196,25 +252,11 @@ automation:
    - Verify SSH connection is maintained (check Home Assistant logs)
    - Ensure Timekpra CLI is responding: `ssh ha-control@host 'sudo /usr/local/bin/ha_timekpra/child-json'`
 
-## Required Timekpra Commands
+## Required Adapter Commands
 
-The integration expects the following scripts in `/usr/local/bin/ha_timekpra/`:
-
-- **`child-json`** - Returns JSON with screen time data
-- **`child-status`** - Returns text status (optional)
-- **`child-add-time`** - Adds time (takes minutes as argument)
-- **`child-block`** - Blocks screen access
-
-Expected JSON format from `child-json`:
-```json
-{
-  "user": "username",
-  "time_spent_day": 3600,
-  "time_left_day": 7200,
-  "time_spent_week": 25200,
-  "time_spent_month": 108000
-}
-```
+See [Install the command adapter scripts](#install-the-command-adapter-scripts)
+above for the required filenames, installation commands, and JSON response
+format.
 
 ## Development
 

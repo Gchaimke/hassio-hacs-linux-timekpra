@@ -1,0 +1,16 @@
+#!/bin/bash
+
+MINUTES="$1"
+# Use TIMEKPR_USER when provided; otherwise add time for the Linux user child.
+TIMEKPR_USER="${TIMEKPR_USER:-child}"
+
+case "$MINUTES" in
+    ''|*[!0-9]*)
+        echo "Invalid minutes"
+        exit 1
+        ;;
+esac
+
+SECONDS=$((MINUTES * 60))
+/usr/bin/timekpra --settimeleft "$TIMEKPR_USER" '+' "$SECONDS"
+echo "Added $MINUTES minutes, $SECONDS"

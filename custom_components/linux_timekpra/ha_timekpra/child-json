@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Use TIMEKPR_USER when provided; otherwise query the Linux user named child.
+TIMEKPR_USER="${TIMEKPR_USER:-child}"
+INFO=$(/usr/bin/timekpra --userinfo "$TIMEKPR_USER")
+
+get_value() {
+    echo "$INFO" | grep "^$1:" | cut -d':' -f2- | xargs
+}
+
+LIMIT_DAY=$(get_value "LIMITS_PER_WEEKDAYS")
+TIME_DAY=$(get_value "TIME_SPENT_DAY")
+TIME_WEEK=$(get_value "TIME_SPENT_WEEK")
+TIME_MONTH=$(get_value "TIME_SPENT_MONTH")
+TIME_LEFT_DAY=$(get_value "TIME_LEFT_DAY")
+PLAYTIME_LEFT=$(get_value "PLAYTIME_LEFT_DAY")
+PLAYTIME_SPENT=$(get_value "PLAYTIME_SPENT_DAY")
+LIMIT_WEEK=$(get_value "LIMIT_PER_WEEK")
+
+python3 - "$TIMEKPR_USER" "$TIME_DAY" "$TIME_LEFT_DAY" "$TIME_WEEK" "$TIME_MONTH" "$PLAYTIME_LEFT" "$PLAYTIME_SPENT" "$LIMIT_WEEK" <<'PY'
+import json
+import sys
+
+user, day, left, week, month, play_left, play_spent, week_limit = sys.argv[1:]
+
+print(json.dumps({
+    "user": user,
+    "time_spent_day": int(day),
+    "time_left_day": int(left),
+    "time_spent_week": int(week),
+    "time_spent_month": int(month),
+    "playtime_left_day": int(play_left),
+    "playtime_spent_day": int(play_spent),
+    "limit_per_week": int(week_limit)
+}))

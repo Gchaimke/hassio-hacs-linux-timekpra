@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Use TIMEKPR_USER when provided; otherwise show status for the Linux user child.
+TIMEKPR_USER="${TIMEKPR_USER:-child}"
+
+/usr/bin/timekpra --userinfo "$TIMEKPR_USER"
