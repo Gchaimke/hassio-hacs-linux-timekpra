@@ -23,7 +23,7 @@
 ## Files Implemented (Phase 1-4)
 
 ### Phase 1: Core Infrastructure ✅
-- ✅ manifest.json - Integration metadata with paramiko/cryptography deps
+- ✅ manifest.json - Integration metadata with Paramiko SSH dependency
 - ✅ const.py - Configuration constants and signal definitions
 - ✅ __init__.py - Platform registration and async_setup_entry
 
