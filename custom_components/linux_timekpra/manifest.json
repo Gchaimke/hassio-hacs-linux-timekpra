@@ -1,0 +1,17 @@
+{
+  "domain": "linux_timekpra",
+  "name": "Linux Timekpra",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/Gchaimke/hassio-hacs-linux-timekpra",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/Gchaimke/hassio-hacs-linux-timekpra/issues",
+  "requirements": [
+    "paramiko==3.4.0",
+    "cryptography==41.0.7"
+  ],
+  "single_config_entry": true,
+  "version": "1.0.0"
+}

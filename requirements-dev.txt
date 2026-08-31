@@ -1,0 +1,27 @@
+# Development dependencies for Linux Timekpra integration
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+
+# Code quality
+black==23.12.0
+flake8==6.1.0
+isort==5.13.2
+mypy==1.7.1
+pylint==3.0.3
+
+# Type stubs
+types-paramiko==3.4.0.8
+
+# Home Assistant
+homeassistant==2024.1.0
+
+# Integration dependencies
+paramiko==3.4.0
+cryptography==41.0.7
+
+# Development utilities
+pre-commit==3.5.0

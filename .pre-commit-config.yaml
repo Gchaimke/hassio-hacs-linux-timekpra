@@ -1,0 +1,52 @@
+# Pre-commit hooks configuration for Linux Timekpra integration
+repos:
+  # Black formatter
+  - repo: https://github.com/psf/black
+    rev: 23.12.0
+    hooks:
+      - id: black
+        language_version: python3
+        args: [--line-length=100]
+
+  # isort import sorting
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=100]
+
+  # Flake8 linter
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=100, --extend-ignore=E203]
+        additional_dependencies: [flake8-docstrings]
+
+  # MyPy type checker
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.1
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-paramiko]
+        args: [--strict]
+        exclude: ^tests/
+
+  # Pylint
+  - repo: https://github.com/PyCQA/pylint
+    rev: pylint-3.0.3
+    hooks:
+      - id: pylint
+        args: [--max-line-length=100]
+        exclude: ^tests/
+
+  # Pre-commit built-in hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-json
+        exclude: strings.json

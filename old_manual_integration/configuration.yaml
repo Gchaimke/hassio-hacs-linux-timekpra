@@ -1,0 +1,145 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+input_number:
+  mac_pending_minutes:
+    name: Mac Pending Minutes
+    min: 0
+    max: 1440
+    step: 15
+    mode: box
+    unit_of_measurement: "min"
+
+input_boolean:
+  mac_pending_block:
+    name: Mac Pending Block
+
+shell_command:
+  mac_status: >-
+    ssh -i /config/.ssh/id_ed25519 -o UserKnownHostsFile=/config/.ssh/known_hosts ha-control@192.0.2.10 'sudo /usr/local/bin/ha_timekpra/child-status'
+
+  mac_add_time: >-
+    ssh -i /config/.ssh/id_ed25519 -o UserKnownHostsFile=/config/.ssh/known_hosts ha-control@192.0.2.10 "sudo /usr/local/bin/ha_timekpra/child-add-time '{{ minutes }}'"
+
+  mac_block: >-
+    ssh -i /config/.ssh/id_ed25519 -o UserKnownHostsFile=/config/.ssh/known_hosts ha-control@192.0.2.10 'sudo /usr/local/bin/ha_timekpra/child-block'
+
+command_line:
+  - sensor:
+      name: MAC Screen Time
+      unique_id: mac_screen_time
+      command: >-
+        ssh -i /config/.ssh/id_ed25519 -o UserKnownHostsFile=/config/.ssh/known_hosts ha-control@192.0.2.10 'sudo /usr/local/bin/ha_timekpra/child-json'
+      scan_interval: 30
+      value_template: "{{ value_json.time_left_day | default(0) }}"
+      unit_of_measurement: "s"
+      json_attributes:
+        - user
+        - time_spent_day
+        - time_left_day
+        - time_spent_week
+        - time_spent_month
+        - playtime_left_day
+        - playtime_spent_day
+        - limit_per_week
+  - binary_sensor:
+      name: Mac PC Online
+      unique_id: mac_pc_online
+      command: >-
+        ssh -i /config/.ssh/id_ed25519 -o BatchMode=yes -o ConnectTimeout=3 -o ConnectionAttempts=1 -o UserKnownHostsFile=/config/.ssh/known_hosts ha-control@192.0.2.10 'echo ONLINE'
+      payload_on: "ONLINE"
+      payload_off: "OFFLINE"
+      scan_interval: 30
+      command_timeout: 5
+
+
+template:
+  - sensor:
+      - name: "Mac Time Used"
+        unique_id: mac_time_used
+        unit_of_measurement: "min"
+        state: >
+          {{ (
+            state_attr('sensor.mac_screen_time', 'time_spent_day')
+            | int(0) / 60
+          ) | round(0) }}
+
+      - name: "Mac Time Remaining"
+        unique_id: mac_time_remaining
+        unit_of_measurement: "min"
+        state: >
+          {{ (
+            state_attr('sensor.mac_screen_time', 'time_left_day')
+            | int(0) / 60
+          ) | round(0) }}
+
+      - name: "Mac Daily Limit"
+        unique_id: mac_daily_limit
+        unit_of_measurement: "min"
+        state: >
+          {{
+            (
+              (
+                state_attr('sensor.mac_screen_time', 'time_spent_day')
+                | int(0)
+              ) +
+              (
+                state_attr('sensor.mac_screen_time', 'time_left_day')
+                | int(0)
+              )
+            ) / 60
+          | round(0) }}
+
+      - name: "Mac PlayTime Remaining"
+        unique_id: mac_playtime_remaining
+        unit_of_measurement: "min"
+        state: >
+          {{ (
+            state_attr('sensor.mac_screen_time', 'playtime_left_day')
+            | int(0) / 60
+          ) | round(0) }}
+
+      - name: "Mac Screen Usage Percent"
+        unique_id: mac_screen_usage_percent
+        unit_of_measurement: "%"
+        state: >
+          {% set used =
+            state_attr('sensor.mac_screen_time', 'time_spent_day')
+            | int(0) %}
+          {% set left =
+            state_attr('sensor.mac_screen_time', 'time_left_day')
+            | int(0) %}
+
+          {% if used + left > 0 %}
+            {{ (used / (used + left) * 100) | round(0) }}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "Mac Queue Status"
+        unique_id: mac_queue_status
+        state: >
+          {% set online =
+            is_state('binary_sensor.mac_pc_online', 'on') %}
+          {% set minutes =
+            states('input_number.mac_pending_minutes') | int(0) %}
+          {% set block =
+            is_state('input_boolean.mac_pending_block', 'on') %}
+
+          {% if not online %}
+            Offline
+          {% elif block %}
+            Blocking...
+          {% elif minutes > 0 %}
+            Sending {{ minutes }} min
+          {% else %}
+            Ready
+          {% endif %}

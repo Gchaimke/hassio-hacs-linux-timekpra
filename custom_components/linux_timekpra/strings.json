@@ -1,0 +1,59 @@
+{
+  "title": "Linux Timekpra",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Linux Timekpra",
+        "description": "Configure SSH connection to your Linux PC running Timekpra to manage screen time.",
+        "data": {
+          "ssh_host": "SSH Host Address",
+          "ssh_user": "SSH Username",
+          "ssh_key_path": "SSH Private Key Path",
+          "ssh_port": "SSH Port"
+        },
+        "data_description": {
+          "ssh_host": "IP address or hostname of your Linux PC (e.g., 192.0.2.10 or pc.local)",
+          "ssh_user": "Username for SSH connection (e.g., ha-control)",
+          "ssh_key_path": "Path to SSH private key file (e.g., /config/.ssh/id_ed25519)",
+          "ssh_port": "SSH port, usually 22"
+        }
+      },
+      "advanced": {
+        "title": "Advanced Settings",
+        "description": "Configure polling and command paths.",
+        "data": {
+          "scan_interval": "Polling Interval",
+          "command_path": "Timekpra Command Path"
+        },
+        "data_description": {
+          "scan_interval": "How often to poll for screen time status (in seconds). Default is 30.",
+          "command_path": "Path to timekpra commands on remote host. Default is /usr/local/bin/ha_timekpra"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to SSH host. Check host, username, and key path.",
+      "invalid_key": "SSH key file not found or invalid.",
+      "command_failed": "Failed to execute timekpra command on remote host."
+    },
+    "abort": {
+      "already_configured": "Linux Timekpra is already configured."
+    }
+  },
+  "services": {
+    "add_time": {
+      "name": "Add Screen Time",
+      "description": "Add allowed screen time to the device.",
+      "fields": {
+        "minutes": {
+          "name": "Minutes",
+          "description": "Number of minutes to add to allowed screen time"
+        }
+      }
+    },
+    "block": {
+      "name": "Block Screen",
+      "description": "Immediately block screen access."
+    }
+  }
+}

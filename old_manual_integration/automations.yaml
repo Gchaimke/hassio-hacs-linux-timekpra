@@ -1,0 +1,14 @@
+- alias: Mac - Process Offline Queue
+  id: mac_process_offline_queue
+  triggers:
+  - trigger: time_pattern
+    seconds: /30
+  - trigger: state
+    entity_id: binary_sensor.mac_pc_online
+    to: 'on'
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.mac_pc_online
+    state: 'on'
+  actions:
+  - action: script.mac_process_queue

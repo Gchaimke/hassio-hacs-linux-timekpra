@@ -1,0 +1,117 @@
+mac_process_queue:
+  alias: "Mac - Process Queue"
+  mode: single
+
+  sequence:
+    # ==========================================
+    # 1. PROCESS PENDING BLOCK
+    # ==========================================
+
+    - if:
+        - condition: state
+          entity_id: input_boolean.mac_pending_block
+          state: "on"
+
+        - condition: state
+          entity_id: binary_sensor.mac_pc_online
+          state: "on"
+
+      then:
+        - action: shell_command.mac_block
+          response_variable: block_result
+
+        - if:
+            - condition: template
+              value_template: >
+                {{ block_result.returncode | int(1) == 0 }}
+
+          then:
+            - action: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.mac_pending_block
+
+            - action: input_number.set_value
+              target:
+                entity_id: input_number.mac_pending_minutes
+              data:
+                value: 0
+
+    # ==========================================
+    # 2. PROCESS PENDING TIME
+    # ==========================================
+
+    - if:
+        - condition: state
+          entity_id: binary_sensor.mac_pc_online
+          state: "on"
+
+        - condition: numeric_state
+          entity_id: input_number.mac_pending_minutes
+          above: 0
+
+      then:
+        - variables:
+            pending_minutes: >
+              {{ states('input_number.mac_pending_minutes') | int(0) }}
+
+        - action: shell_command.mac_add_time
+          data:
+            minutes: "{{ pending_minutes }}"
+          response_variable: add_result
+
+        - if:
+            - condition: template
+              value_template: >
+                {{ add_result.returncode | int(1) == 0 }}
+
+          then:
+            - action: input_number.set_value
+              target:
+                entity_id: input_number.mac_pending_minutes
+              data:
+                value: 0
+
+# ==========================================
+# OPTIONAL: MANUAL REFRESH
+# ==========================================
+
+mac_refresh_status:
+  alias: "Mac - Refresh Status"
+  mode: single
+
+  sequence:
+    - action: homeassistant.update_entity
+      target:
+        entity_id:
+          - binary_sensor.mac_pc_online
+          - sensor.mac_screen_time
+
+mac_queue_add_15:
+  alias: "Mac - Queue +15"
+  mode: single
+  sequence:
+    - action: input_number.increment
+      target:
+        entity_id: input_number.mac_pending_minutes
+
+mac_queue_add_30:
+  alias: "Mac - Queue +30"
+  mode: single
+  sequence:
+    - repeat:
+        count: 2
+        sequence:
+          - action: input_number.increment
+            target:
+              entity_id: input_number.mac_pending_minutes
+
+mac_queue_add_60:
+  alias: "Mac - Queue +60"
+  mode: single
+  sequence:
+    - repeat:
+        count: 4
+        sequence:
+          - action: input_number.increment
+            target:
+              entity_id: input_number.mac_pending_minutes
