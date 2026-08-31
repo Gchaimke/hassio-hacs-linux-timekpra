@@ -44,7 +44,6 @@
 
 ### Phase 5: Additional Platforms ✅
 - ✅ select.py - Select entity with preset time options (15min, 30min, 1hr, 2hrs, custom)
-- ✅ switch.py - Switch entity for blocking/unblocking screen state
 
 ### Phase 6: Testing & Development ✅
 - ✅ tests/__init__.py - Test package marker
@@ -85,7 +84,6 @@
   - Type checking (mypy)
   - File checks (trailing whitespace, JSON, YAML)
 
-- ✅ __init__.py - Updated to include select and switch platforms
 
 ## Complete Integration File List
 
@@ -102,7 +100,6 @@ custom_components/linux_timekpra/
 ├── button.py                    ✅ Block button
 ├── number.py                    ✅ Add time input
 ├── select.py                    ✅ Preset time select
-├── switch.py                    ✅ Block state switch
 ├── README.md                    ✅ User documentation
 └── tests/
     ├── __init__.py              ✅ Test package
@@ -121,6 +118,5 @@ Root-level files:
 
 All 4 optional components have been implemented:
 1. ✅ Select entity for preset time options
-2. ✅ Switch entity for persistent blocking state
 3. ✅ Complete test fixtures and test suite
 4. ✅ Comprehensive README and documentation

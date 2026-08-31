@@ -73,7 +73,6 @@ class TimekpraTimeSpentDaySensor(TimekpraEntity, SensorEntity):
         self._attr_name = "Timekpra Time Spent Today"
         self._attr_icon = "mdi:clock"
         self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
-        self._attr_device_class = SensorDeviceClass.DURATION
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
@@ -96,7 +95,6 @@ class TimekpraTimeLeftDaySensor(TimekpraEntity, SensorEntity):
         self._attr_name = "Timekpra Time Left Today"
         self._attr_icon = "mdi:clock-outline"
         self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
-        self._attr_device_class = SensorDeviceClass.DURATION
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
@@ -119,7 +117,6 @@ class TimekpraTimeSpentWeekSensor(TimekpraEntity, SensorEntity):
         self._attr_name = "Timekpra Time Spent This Week"
         self._attr_icon = "mdi:calendar-week"
         self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
-        self._attr_device_class = SensorDeviceClass.DURATION
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
@@ -142,7 +139,6 @@ class TimekpraTimeSpentMonthSensor(TimekpraEntity, SensorEntity):
         self._attr_name = "Timekpra Time Spent This Month"
         self._attr_icon = "mdi:calendar-month"
         self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
-        self._attr_device_class = SensorDeviceClass.DURATION
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property

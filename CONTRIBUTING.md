@@ -253,7 +253,6 @@ linux_timekpra/
 ├── button.py                # Platform: Buttons
 ├── number.py                # Platform: Numbers
 ├── select.py                # Platform: Selects
-├── switch.py                # Platform: Switches
 │
 ├── tests/                   # Test suite
 │   ├── conftest.py          # Pytest fixtures

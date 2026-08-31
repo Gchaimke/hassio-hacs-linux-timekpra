@@ -34,23 +34,24 @@ class TimekpraAddTimeNumber(TimekpraEntity, NumberEntity):
     def __init__(self, controller: TimekpraController, entry_id: str) -> None:
         """Initialize number entity."""
         super().__init__(controller, entry_id)
-        self._attr_name = "Timekpra Add Time"
+        self._attr_name = "Timekpra Minutes to Add"
         self._attr_icon = "mdi:plus-clock"
         self._attr_native_min_value = 1
         self._attr_native_max_value = 480  # 8 hours
         self._attr_native_step = 1
         self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
         self._attr_mode = NumberMode.BOX
-        self._attr_native_value = 15  # Default 15 minutes
 
     async def async_set_native_value(self, value: float) -> None:
-        """Set value."""
-        minutes = int(value)
-        success = await self.controller.async_add_time(minutes)
-        if success:
-            # Reset to default after successful add
-            self._attr_native_value = 15
-            self.async_write_ha_state()
+        """Store the number of minutes for the add button."""
+        self.controller.pending_add_minutes = int(value)
+        self._attr_native_value = self.controller.pending_add_minutes
+        self.async_write_ha_state()
+
+    @property
+    def native_value(self) -> int:
+        """Return the selected number of minutes."""
+        return self.controller.pending_add_minutes
 
     @property
     def unique_id(self) -> str:

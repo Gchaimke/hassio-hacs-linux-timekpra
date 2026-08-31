@@ -6,7 +6,7 @@ A Home Assistant custom integration for managing screen time on Linux PCs using 
 
 - 📊 **Real-time Screen Time Monitoring** - Track daily, weekly, and monthly screen time usage
 - ⏱️ **Time Management** - Add screen time through multiple interfaces (number input, presets, services)
-- 🔒 **Screen Blocking** - Immediately block screen access with a button or switch
+- 🔒 **Screen Blocking** - Immediately block screen access with a button
 - 🔐 **Secure SSH Connection** - Supports Ed25519 and RSA private keys
 - 🔄 **Auto-reconnection** - Automatically reconnects on connection loss
 - 📱 **Flexible UI** - Multiple entity types for different automation scenarios
@@ -155,9 +155,9 @@ reported by Timekpr-Next into whole minutes:
 
 ### Controls
 
-- **Timekpra Add Time** (Number) - Add screen time in minutes (1-480 range)
-  - Set the value and confirm to add that amount of time
-  - Resets to 15 minutes after successful addition
+- **Timekpra Minutes to Add** (Number) - Select the amount of time in minutes (1-480 range)
+- **Timekpra Add Time** (Button) - Add the selected number of minutes
+  - Resets the input to 15 minutes after successful addition
 
 - **Timekpra Preset Time** (Select) - Quick preset options
   - 15 minutes
@@ -169,8 +169,25 @@ reported by Timekpr-Next into whole minutes:
 - **Timekpra Block Screen** (Button) - Immediately block screen access
   - Press to activate screen block
 
-- **Timekpra Screen Block** (Switch) - Toggle screen block state
-  - Turn on to block, turn off to unblock (if supported by Timekpra)
+### Dashboard card
+
+To show the minute input and its action button together, add an **Entities**
+card to your dashboard:
+
+```yaml
+type: entities
+title: Timekpr-Next
+entities:
+  - entity: number.timekpra_minutes_to_add
+    name: Minutes to add
+  - entity: button.timekpra_add_time
+    name: Add time
+  - entity: button.timekpra_block_screen
+    name: Block screen
+```
+
+Entity IDs can differ if Home Assistant has already generated them. Select the
+entities from the dashboard editor if these IDs do not match your installation.
 
 ## Services
 
@@ -298,8 +315,6 @@ linux_timekpra/
 ├── button.py                # Button entity
 ├── number.py                # Number entity
 ├── select.py                # Select entity
-├── switch.py                # Switch entity
-│
 └── tests/                   # Test suite
     ├── conftest.py          # Test fixtures
     ├── test_config_flow.py   # Config flow tests

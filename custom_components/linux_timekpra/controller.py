@@ -99,6 +99,7 @@ class TimekpraController:
         self._ssh_client: paramiko.SSHClient | None = None
         self._task: asyncio.Task[None] | None = None
         self.is_connected = False
+        self.pending_add_minutes = 15
         self.data: dict[str, Any] = {
             ATTR_USER: None,
             ATTR_TIME_SPENT_DAY: 0,

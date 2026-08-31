@@ -6,7 +6,7 @@ A Home Assistant custom integration for managing screen time on a Linux PC throu
 
 - Monitor daily, weekly, and monthly screen-time usage
 - Add screen time with a number entity or preset selector
-- Block screen access with a button or switch
+- Block screen access with a button
 - Configure the SSH connection through Home Assistant's UI
 - Support Ed25519 and RSA SSH keys
 - Reconnect automatically after a connection loss
@@ -63,7 +63,6 @@ custom_components/linux_timekpra/
 ├── button.py               # Block action
 ├── number.py               # Add-time control
 ├── select.py               # Preset-time control
-├── switch.py               # Block state control
 └── tests/                  # Automated tests
 ```
 
