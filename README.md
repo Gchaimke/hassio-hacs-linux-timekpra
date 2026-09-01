@@ -5,6 +5,7 @@ A Home Assistant custom integration for managing screen time on a Linux PC throu
 ## Features
 
 - Monitor daily, weekly, and monthly screen-time usage
+- Show whether the Linux PC is online
 - Add screen time with a number entity or preset selector
 - Block screen access with a button
 - Configure the SSH connection through Home Assistant's UI

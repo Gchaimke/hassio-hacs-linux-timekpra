@@ -146,6 +146,9 @@ class TimekpraController:
         )
         self._ssh_client = ssh_client
         self.is_connected = ssh_client is not None
+        async_dispatcher_send(
+            self.hass, signal_device_update(self.config["entry_id"])
+        )
         if self.is_connected:
             _LOGGER.debug("Connected to SSH server %s@%s", self.ssh_user, self.ssh_host)
         return self.is_connected
@@ -155,6 +158,9 @@ class TimekpraController:
         if self._ssh_client:
             await self.hass.async_add_executor_job(self._ssh_client.close)
         self.is_connected = False
+        async_dispatcher_send(
+            self.hass, signal_device_update(self.config["entry_id"])
+        )
 
     async def execute_command(self, command: str) -> str | None:
         """Execute a command on the remote host."""
@@ -175,6 +181,9 @@ class TimekpraController:
         except Exception as err:
             _LOGGER.error("Failed to execute command: %s", err)
             self.is_connected = False
+            async_dispatcher_send(
+                self.hass, signal_device_update(self.config["entry_id"])
+            )
             return None
 
     async def async_get_status(self) -> bool:

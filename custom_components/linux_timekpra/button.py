@@ -57,7 +57,7 @@ class TimekpraAddTimeButton(TimekpraEntity, ButtonEntity):
         """Initialize button."""
         super().__init__(controller, entry_id)
         self._attr_name = "Timekpra Add Time"
-        self._attr_icon = "mdi:plus-clock"
+        self._attr_icon = "mdi:clock-plus"
 
     async def async_press(self) -> None:
         """Add the minutes selected in the number entity."""

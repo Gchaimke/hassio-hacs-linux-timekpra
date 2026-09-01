@@ -81,6 +81,11 @@ class TimekpraTimeSpentDaySensor(TimekpraEntity, SensorEntity):
         return self.controller.data.get(ATTR_TIME_SPENT_DAY)
 
     @property
+    def available(self) -> bool:
+        """Keep the last known value visible when the PC is offline."""
+        return True
+
+    @property
     def unique_id(self) -> str:
         """Return unique ID."""
         return f"{DOMAIN}_{self._entry_id}_time_spent_day"
@@ -101,6 +106,11 @@ class TimekpraTimeLeftDaySensor(TimekpraEntity, SensorEntity):
     def native_value(self) -> int | None:
         """Return duration in minutes."""
         return self.controller.data.get(ATTR_TIME_LEFT_DAY)
+
+    @property
+    def available(self) -> bool:
+        """Keep the last known value visible when the PC is offline."""
+        return True
 
     @property
     def unique_id(self) -> str:
@@ -125,6 +135,11 @@ class TimekpraTimeSpentWeekSensor(TimekpraEntity, SensorEntity):
         return self.controller.data.get(ATTR_TIME_SPENT_WEEK)
 
     @property
+    def available(self) -> bool:
+        """Keep the last known value visible when the PC is offline."""
+        return True
+
+    @property
     def unique_id(self) -> str:
         """Return unique ID."""
         return f"{DOMAIN}_{self._entry_id}_time_spent_week"
@@ -145,6 +160,11 @@ class TimekpraTimeSpentMonthSensor(TimekpraEntity, SensorEntity):
     def native_value(self) -> int | None:
         """Return duration in minutes."""
         return self.controller.data.get(ATTR_TIME_SPENT_MONTH)
+
+    @property
+    def available(self) -> bool:
+        """Keep the last known value visible when the PC is offline."""
+        return True
 
     @property
     def unique_id(self) -> str:

@@ -147,7 +147,9 @@ reported by Timekpr-Next into whole minutes:
 ### Sensors (Read-only)
 
 - Duration values are returned and displayed in minutes. Convert them to seconds in an automation when second-level precision is required.
+- **Timekpra PC Online** - Connection status; `on` means the Linux PC is reachable over SSH
 - **Timekpra User** - Currently monitored user
+- Time sensors keep their last successful values visible while the PC is offline; use **Timekpra PC Online** to check whether those values are current.
 - **Timekpra Time Left Today** - Remaining screen time for today (in minutes)
 - **Timekpra Time Spent Today** - Screen time used today (in minutes)
 - **Timekpra Time Spent This Week** - Total screen time this week (in minutes)
@@ -180,10 +182,13 @@ title: Timekpr-Next
 entities:
   - entity: number.timekpra_minutes_to_add
     name: Minutes to add
+    icon: mdi:plus-clock
   - entity: button.timekpra_add_time
     name: Add time
+    icon: mdi:plus-clock
   - entity: button.timekpra_block_screen
     name: Block screen
+    icon: mdi:lock
 ```
 
 Entity IDs can differ if Home Assistant has already generated them. Select the
