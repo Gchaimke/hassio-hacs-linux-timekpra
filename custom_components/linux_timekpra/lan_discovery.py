@@ -89,7 +89,7 @@ def _get_network_details() -> tuple[str, ipaddress.IPv4Network] | None:
             interface = fields[1].split("@", 1)[0].rstrip(":")
         except (ValueError, IndexError):
             continue
-        if isinstance(address.ip, ipaddress.IPv4Address):
+        if isinstance(address, ipaddress.IPv4Interface):
             return interface, address.network
 
     _LOGGER.error("No global IPv4 network interface was found")

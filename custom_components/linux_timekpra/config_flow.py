@@ -49,7 +49,7 @@ class TimekpraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle user step."""
         errors = {}
 
@@ -94,7 +94,7 @@ class TimekpraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle advanced settings."""
         if user_input is not None:
             return self.async_create_entry(
@@ -136,6 +136,14 @@ class TimekpraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _validate_connection, config
         )
 
+    def is_matching(self, other_flow: TimekpraConfigFlow) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return (
+            isinstance(other_flow, TimekpraConfigFlow)
+            and other_flow.handler == self.handler
+            and other_flow.context.get("source") == self.context.get("source")
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -158,10 +166,10 @@ def _validate_connection(config: dict[str, Any]) -> bool:
 
         try:
             key = Ed25519Key.from_private_key_file(str(key_path))
-        except Exception:
+        except (OSError, TypeError, ValueError, paramiko.SSHException):
             try:
                 key = RSAKey.from_private_key_file(str(key_path))
-            except Exception as err:
+            except (OSError, TypeError, ValueError, paramiko.SSHException) as err:
                 _LOGGER.error("Failed to load SSH key: %s", err)
                 return False
 
@@ -174,18 +182,19 @@ def _validate_connection(config: dict[str, Any]) -> bool:
         )
         _LOGGER.debug("SSH connection validation successful")
         return True
-    except Exception as err:
+    except (OSError, TypeError, ValueError, paramiko.SSHException) as err:
         _LOGGER.error("SSH connection validation failed: %s", err)
         return False
     finally:
         ssh_client.close()
+
 
 class TimekpraOptionsFlow(config_entries.OptionsFlow):
     """Options flow for Linux Timekpra."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> config_entries.OptionsFlowResult:
         """Handle options step."""
         errors = {}
         if user_input is not None:

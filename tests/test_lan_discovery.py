@@ -5,7 +5,7 @@ from __future__ import annotations
 from ipaddress import IPv4Network
 from unittest.mock import patch
 
-from .. import lan_discovery
+from custom_components.linux_timekpra import lan_discovery
 
 
 def test_find_device_by_mac_uses_active_lan_scan():

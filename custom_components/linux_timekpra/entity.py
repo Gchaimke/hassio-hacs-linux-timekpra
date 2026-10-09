@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -29,7 +29,7 @@ class TimekpraEntity(Entity):
             name="Linux Timekpra",
             manufacturer="Timekpra",
             model="Screen Time Manager",
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     @property

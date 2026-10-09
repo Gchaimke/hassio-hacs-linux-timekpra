@@ -41,12 +41,14 @@ def mock_ssh_key():
 
 
 @pytest.fixture
-def config_entry_data():
+def config_entry_data(tmp_path):
     """Create mock config entry data."""
+    key_path = tmp_path / "id_ed25519"
+    key_path.write_text("test key")
     return {
         "ssh_host": "192.0.2.10",
         "ssh_user": "ha-control",
-        "ssh_key_path": "/config/.ssh/id_ed25519",
+        "ssh_key_path": str(key_path),
         "ssh_port": 22,
         "scan_interval": 30,
         "command_path": "/usr/local/bin/ha_timekpra",
@@ -55,9 +57,9 @@ def config_entry_data():
 
 
 @pytest.fixture
-async def hass():
+async def hass(tmp_path):
     """Create a test Home Assistant instance."""
-    hass = HomeAssistant()
+    hass = HomeAssistant(str(tmp_path))
     yield hass
     await hass.async_block_till_done()
 

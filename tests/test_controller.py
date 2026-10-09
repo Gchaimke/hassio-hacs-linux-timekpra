@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ..const import (
+from custom_components.linux_timekpra.const import (
     ATTR_TIME_LEFT_DAY,
     ATTR_TIME_SPENT_DAY,
     ATTR_USER,
@@ -15,7 +15,7 @@ from ..const import (
     CONF_MAC_ADDRESS,
     CONF_SSH_HOST,
 )
-from ..controller import TimekpraController
+from custom_components.linux_timekpra.controller import TimekpraController
 
 
 @pytest.mark.asyncio
@@ -126,15 +126,12 @@ async def test_controller_execute_command_success(
     stdout.read = MagicMock(return_value=b"command output")
     stderr.read = MagicMock(return_value=b"")
 
-    with patch.object(controller._ssh_client, "exec_command") as mock_exec:
-        controller._ssh_client = MagicMock()
-        controller._ssh_client.exec_command = MagicMock(
-            return_value=(stdin, stdout, stderr)
-        )
+    controller._ssh_client = MagicMock(
+        exec_command=MagicMock(return_value=(stdin, stdout, stderr))
+    )
+    result = await controller.execute_command("test command")
 
-        result = await controller.execute_command("test command")
-
-        assert result == "command output"
+    assert result == "command output"
 
 
 @pytest.mark.asyncio

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from ..sensor import TimekpraCurrentIpSensor
+from custom_components.linux_timekpra.sensor import TimekpraCurrentIpSensor
 
 
 def test_current_ip_sensor_tracks_controller_host():
