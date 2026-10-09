@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 
 from homeassistant.core import HomeAssistant
 
-from ..config_flow import TimekpraConfigFlow, _validate_connection
+from ..config_flow import (
+    TimekpraConfigFlow,
+    TimekpraOptionsFlow,
+    _validate_connection,
+)
 from ..const import (
     CONF_COMMAND_PATH,
     CONF_SCAN_INTERVAL,
@@ -49,6 +53,35 @@ async def test_config_flow_user_step_invalid(hass: HomeAssistant, config_entry_d
 
         assert result["type"] == "form"
         assert result["errors"]["base"] == "cannot_connect"
+
+
+@pytest.mark.asyncio
+async def test_options_flow_can_update_connection(mock_config_entry):
+    """Test options flow exposes and saves updated SSH connection settings."""
+    flow = TimekpraConfigFlow.async_get_options_flow(mock_config_entry)
+    assert isinstance(flow, TimekpraOptionsFlow)
+
+    with patch.object(
+        TimekpraOptionsFlow,
+        "config_entry",
+        new_callable=PropertyMock,
+        return_value=mock_config_entry,
+    ):
+        result = await flow.async_step_init()
+        assert result["type"] == "form"
+        schema_keys = {
+            key.schema for key in result["data_schema"].schema
+        }
+        assert CONF_SSH_HOST in schema_keys
+
+        updated_config = {
+            **mock_config_entry.data,
+            CONF_SSH_HOST: "192.0.2.25",
+        }
+        result = await flow.async_step_init(updated_config)
+
+    assert result["type"] == "create_entry"
+    assert result["data"][CONF_SSH_HOST] == "192.0.2.25"
 
 
 @pytest.mark.asyncio

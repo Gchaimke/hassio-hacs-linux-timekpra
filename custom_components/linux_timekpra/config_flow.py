@@ -31,6 +31,7 @@ from .const import (
     DEFAULT_COMMAND_PATH,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSH_KEY_PATH,
+    DEFAULT_SSH_PORT,
     DOMAIN,
 )
 
@@ -128,7 +129,7 @@ class TimekpraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Get options flow."""
-        return TimekpraOptionsFlow(config_entry)
+        return TimekpraOptionsFlow()
 
 
 def _validate_connection(config: dict[str, Any]) -> bool:
@@ -169,25 +170,58 @@ def _validate_connection(config: dict[str, Any]) -> bool:
 class TimekpraOptionsFlow(config_entries.OptionsFlow):
     """Options flow for Linux Timekpra."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
         """Handle options step."""
         if user_input is not None:
-            return self.async_abort(reason="reconfigure_successful")
+            return self.async_create_entry(title="", data=user_input)
 
+        config_entry = self.config_entry
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema({
                 vol.Required(
+                    CONF_SSH_HOST,
+                    default=config_entry.options.get(
+                        CONF_SSH_HOST, config_entry.data[CONF_SSH_HOST]
+                    ),
+                ): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Required(
+                    CONF_SSH_USER,
+                    default=config_entry.options.get(
+                        CONF_SSH_USER, config_entry.data[CONF_SSH_USER]
+                    ),
+                ): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Required(
+                    CONF_SSH_KEY_PATH,
+                    default=config_entry.options.get(
+                        CONF_SSH_KEY_PATH,
+                        config_entry.data.get(
+                            CONF_SSH_KEY_PATH, DEFAULT_SSH_KEY_PATH
+                        ),
+                    ),
+                ): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Required(
+                    CONF_SSH_PORT,
+                    default=config_entry.options.get(
+                        CONF_SSH_PORT,
+                        config_entry.data.get(CONF_SSH_PORT, DEFAULT_SSH_PORT),
+                    ),
+                ): NumberSelector(
+                    NumberSelectorConfig(min=1, max=65535, step=1)
+                ),
+                vol.Required(
                     CONF_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(
+                    default=config_entry.options.get(
                         CONF_SCAN_INTERVAL,
-                        self.config_entry.data.get(
+                        config_entry.data.get(
                             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                         ),
                     ),
@@ -196,9 +230,9 @@ class TimekpraOptionsFlow(config_entries.OptionsFlow):
                 ),
                 vol.Required(
                     CONF_COMMAND_PATH,
-                    default=self.config_entry.options.get(
+                    default=config_entry.options.get(
                         CONF_COMMAND_PATH,
-                        self.config_entry.data.get(
+                        config_entry.data.get(
                             CONF_COMMAND_PATH, DEFAULT_COMMAND_PATH
                         ),
                     ),
