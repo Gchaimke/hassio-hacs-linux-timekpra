@@ -35,7 +35,7 @@ class TimekpraBlockButton(TimekpraEntity, ButtonEntity):
     def __init__(self, controller: TimekpraController, entry_id: str) -> None:
         """Initialize button."""
         super().__init__(controller, entry_id)
-        self._attr_name = "Timekpra Block Screen"
+        self._attr_name = "Block Screen"
         self._attr_icon = "mdi:lock"
 
     async def async_press(self) -> None:
@@ -56,7 +56,7 @@ class TimekpraAddTimeButton(TimekpraEntity, ButtonEntity):
     def __init__(self, controller: TimekpraController, entry_id: str) -> None:
         """Initialize button."""
         super().__init__(controller, entry_id)
-        self._attr_name = "Timekpra Add Time"
+        self._attr_name = "Add Time"
         self._attr_icon = "mdi:clock-plus"
 
     async def async_press(self) -> None:

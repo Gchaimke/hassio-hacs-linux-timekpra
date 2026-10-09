@@ -31,7 +31,7 @@ class TimekpraPcOnlineSensor(TimekpraEntity, BinarySensorEntity):
     def __init__(self, controller: TimekpraController, entry_id: str) -> None:
         """Initialize the connectivity sensor."""
         super().__init__(controller, entry_id)
-        self._attr_name = "Timekpra PC Online"
+        self._attr_name = "PC Online"
         self._attr_icon = "mdi:desktop-tower"
         self._attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 

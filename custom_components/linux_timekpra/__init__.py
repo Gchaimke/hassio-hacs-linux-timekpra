@@ -51,6 +51,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate config entries to use a stable title without the host address."""
+    if entry.version == 1:
+        hass.config_entries.async_update_entry(
+            entry,
+            title="Timekpra",
+            version=2,
+        )
+        return True
+
+    _LOGGER.error(
+        "Cannot migrate config entry %s from version %s",
+        entry.entry_id,
+        entry.version,
+    )
+    return False
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

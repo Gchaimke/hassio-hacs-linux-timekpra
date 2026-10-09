@@ -34,7 +34,7 @@ class TimekpraAddTimeNumber(TimekpraEntity, NumberEntity):
     def __init__(self, controller: TimekpraController, entry_id: str) -> None:
         """Initialize number entity."""
         super().__init__(controller, entry_id)
-        self._attr_name = "Timekpra Minutes to Add"
+        self._attr_name = "Minutes to Add"
         self._attr_icon = "mdi:clock-plus"
         self._attr_native_min_value = 1
         self._attr_native_max_value = 480  # 8 hours

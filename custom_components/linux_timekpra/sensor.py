@@ -49,7 +49,7 @@ class TimekpraUserSensor(TimekpraEntity, SensorEntity):
     def __init__(self, controller: TimekpraController, entry_id: str) -> None:
         """Initialize sensor."""
         super().__init__(controller, entry_id)
-        self._attr_name = "Timekpra User"
+        self._attr_name = "User"
         self._attr_icon = "mdi:account"
         self._attr_device_class = SensorDeviceClass.ENUM
 
@@ -70,7 +70,7 @@ class TimekpraTimeSpentDaySensor(TimekpraEntity, SensorEntity):
     def __init__(self, controller: TimekpraController, entry_id: str) -> None:
         """Initialize sensor."""
         super().__init__(controller, entry_id)
-        self._attr_name = "Timekpra Time Spent Today"
+        self._attr_name = "Spent Today"
         self._attr_icon = "mdi:clock"
         self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
         self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -97,7 +97,7 @@ class TimekpraTimeLeftDaySensor(TimekpraEntity, SensorEntity):
     def __init__(self, controller: TimekpraController, entry_id: str) -> None:
         """Initialize sensor."""
         super().__init__(controller, entry_id)
-        self._attr_name = "Timekpra Time Left Today"
+        self._attr_name = "Left Today"
         self._attr_icon = "mdi:clock-outline"
         self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
         self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -124,7 +124,7 @@ class TimekpraTimeSpentWeekSensor(TimekpraEntity, SensorEntity):
     def __init__(self, controller: TimekpraController, entry_id: str) -> None:
         """Initialize sensor."""
         super().__init__(controller, entry_id)
-        self._attr_name = "Timekpra Time Spent This Week"
+        self._attr_name = "Spent This Week"
         self._attr_icon = "mdi:calendar-week"
         self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
         self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -151,7 +151,7 @@ class TimekpraTimeSpentMonthSensor(TimekpraEntity, SensorEntity):
     def __init__(self, controller: TimekpraController, entry_id: str) -> None:
         """Initialize sensor."""
         super().__init__(controller, entry_id)
-        self._attr_name = "Timekpra Time Spent This Month"
+        self._attr_name = "Spent This Month"
         self._attr_icon = "mdi:calendar-month"
         self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
         self._attr_state_class = SensorStateClass.MEASUREMENT

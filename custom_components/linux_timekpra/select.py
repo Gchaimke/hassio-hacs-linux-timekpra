@@ -33,7 +33,7 @@ class TimekpraPresetTimeSelect(TimekpraEntity, SelectEntity):
     def __init__(self, controller: TimekpraController, entry_id: str) -> None:
         """Initialize select entity."""
         super().__init__(controller, entry_id)
-        self._attr_name = "Timekpra Preset Time"
+        self._attr_name = "Preset Time"
         self._attr_icon = "mdi:clock-plus"
         self._attr_options = [
             "15 minutes",

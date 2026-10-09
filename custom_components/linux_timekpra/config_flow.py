@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 class TimekpraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Linux Timekpra."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -53,7 +53,7 @@ class TimekpraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Validate connection
             if await self._async_validate_connection(user_input):
                 return self.async_create_entry(
-                    title=f"Timekpra ({user_input[CONF_SSH_HOST]})",
+                    title="Timekpra",
                     data=user_input,
                 )
             errors["base"] = "cannot_connect"
