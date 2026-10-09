@@ -6,8 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.core import HomeAssistant
-
 from .. import async_migrate_entry
 from ..config_flow import (
     TimekpraConfigFlow,
@@ -15,18 +13,15 @@ from ..config_flow import (
     _validate_connection,
 )
 from ..const import (
-    CONF_COMMAND_PATH,
-    CONF_SCAN_INTERVAL,
+    CONF_AUTO_SEARCH_IP,
+    CONF_MAC_ADDRESS,
     CONF_SSH_HOST,
     CONF_SSH_KEY_PATH,
-    CONF_SSH_PORT,
-    CONF_SSH_USER,
-    DOMAIN,
 )
 
 
 @pytest.mark.asyncio
-async def test_config_flow_user_step_valid(hass: HomeAssistant, config_entry_data):
+async def test_config_flow_user_step_valid(hass, config_entry_data):
     """Test valid user step."""
     config_flow = TimekpraConfigFlow()
     config_flow.hass = hass
@@ -42,7 +37,7 @@ async def test_config_flow_user_step_valid(hass: HomeAssistant, config_entry_dat
 
 
 @pytest.mark.asyncio
-async def test_config_flow_user_step_invalid(hass: HomeAssistant, config_entry_data):
+async def test_config_flow_user_step_invalid(hass, config_entry_data):
     """Test invalid user step."""
     config_flow = TimekpraConfigFlow()
     config_flow.hass = hass
@@ -54,6 +49,21 @@ async def test_config_flow_user_step_invalid(hass: HomeAssistant, config_entry_d
 
         assert result["type"] == "form"
         assert result["errors"]["base"] == "cannot_connect"
+
+
+@pytest.mark.asyncio
+async def test_config_flow_rejects_invalid_mac(hass, config_entry_data):
+    """Test malformed MAC addresses are rejected before SSH validation."""
+    config_flow = TimekpraConfigFlow()
+    config_flow.hass = hass
+    user_input = {**config_entry_data, CONF_MAC_ADDRESS: "not-a-mac"}
+
+    with patch.object(config_flow, "_async_validate_connection") as mock_validate:
+        result = await config_flow.async_step_user(user_input)
+
+    assert result["type"] == "form"
+    assert result["errors"]["base"] == "invalid_mac"
+    mock_validate.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -88,15 +98,21 @@ async def test_options_flow_can_update_connection(mock_config_entry):
             key.schema for key in result["data_schema"].schema
         }
         assert CONF_SSH_HOST in schema_keys
+        assert CONF_MAC_ADDRESS in schema_keys
+        assert CONF_AUTO_SEARCH_IP in schema_keys
 
         updated_config = {
             **mock_config_entry.data,
             CONF_SSH_HOST: "192.0.2.25",
+            CONF_MAC_ADDRESS: "00:11:22:33:44:55",
+            CONF_AUTO_SEARCH_IP: True,
         }
         result = await flow.async_step_init(updated_config)
 
     assert result["type"] == "create_entry"
     assert result["data"][CONF_SSH_HOST] == "192.0.2.25"
+    assert result["data"][CONF_MAC_ADDRESS] == "00:11:22:33:44:55"
+    assert result["data"][CONF_AUTO_SEARCH_IP] is True
 
 
 @pytest.mark.asyncio

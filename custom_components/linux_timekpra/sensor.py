@@ -34,6 +34,7 @@ async def async_setup_entry(
 
     entities = [
         TimekpraUserSensor(controller, entry.entry_id),
+        TimekpraCurrentIpSensor(controller, entry.entry_id),
         TimekpraTimeSpentDaySensor(controller, entry.entry_id),
         TimekpraTimeLeftDaySensor(controller, entry.entry_id),
         TimekpraTimeSpentWeekSensor(controller, entry.entry_id),
@@ -41,6 +42,31 @@ async def async_setup_entry(
     ]
 
     async_add_entities(entities)
+
+
+class TimekpraCurrentIpSensor(TimekpraEntity, SensorEntity):
+    """Sensor for the current SSH host address."""
+
+    def __init__(self, controller: TimekpraController, entry_id: str) -> None:
+        """Initialize sensor."""
+        super().__init__(controller, entry_id)
+        self._attr_name = "Current IP"
+        self._attr_icon = "mdi:ip-network"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the current SSH host address."""
+        return self.controller.ssh_host or None
+
+    @property
+    def available(self) -> bool:
+        """Keep the last known host address visible while offline."""
+        return True
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID."""
+        return f"{DOMAIN}_{self._entry_id}_current_ip"
 
 
 class TimekpraUserSensor(TimekpraEntity, SensorEntity):

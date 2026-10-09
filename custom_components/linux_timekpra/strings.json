@@ -9,13 +9,17 @@
           "ssh_host": "SSH Host Address",
           "ssh_user": "SSH Username",
           "ssh_key_path": "SSH Private Key Path",
-          "ssh_port": "SSH Port"
+          "ssh_port": "SSH Port",
+          "mac_address": "Linux PC MAC Address",
+          "auto_search_ip": "Automatically find the PC if its IP changes"
         },
         "data_description": {
           "ssh_host": "IP address or hostname of your Linux PC (e.g., 192.0.2.10 or pc.local)",
           "ssh_user": "Username for SSH connection (e.g., ha-control)",
           "ssh_key_path": "Path to SSH private key file (e.g., /config/.ssh/id_ed25519)",
-          "ssh_port": "SSH port, usually 22"
+          "ssh_port": "SSH port, usually 22",
+          "mac_address": "Required for automatic IP rediscovery. Enter the wired or Wi-Fi MAC address used by the PC.",
+          "auto_search_ip": "Search the local network for the configured MAC address after SSH connection failures."
         }
       },
       "advanced": {
@@ -33,11 +37,35 @@
     },
     "error": {
       "cannot_connect": "Failed to connect to SSH host. Check host, username, and key path.",
+      "invalid_mac": "Enter a valid MAC address, such as 00:11:22:AA:BB:CC.",
       "invalid_key": "SSH key file not found or invalid.",
       "command_failed": "Failed to execute timekpra command on remote host."
     },
     "abort": {
       "already_configured": "Linux Timekpra is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "ssh_host": "SSH Host Address",
+          "ssh_user": "SSH Username",
+          "ssh_key_path": "SSH Private Key Path",
+          "ssh_port": "SSH Port",
+          "scan_interval": "Polling Interval",
+          "command_path": "Timekpra Command Path",
+          "mac_address": "Linux PC MAC Address",
+          "auto_search_ip": "Automatically find the PC if its IP changes"
+        },
+        "data_description": {
+          "mac_address": "Required for automatic IP rediscovery. Enter the wired or Wi-Fi MAC address used by the PC.",
+          "auto_search_ip": "Search the local network for the configured MAC address after SSH connection failures."
+        }
+      }
+    },
+    "error": {
+      "invalid_mac": "Enter a valid MAC address, such as 00:11:22:AA:BB:CC."
     }
   },
   "services": {

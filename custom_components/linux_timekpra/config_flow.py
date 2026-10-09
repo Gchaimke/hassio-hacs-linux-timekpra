@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+import re
 from typing import Any
 
 import paramiko
@@ -12,8 +13,8 @@ from paramiko import Ed25519Key, RSAKey
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import section
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     NumberSelector,
     NumberSelectorConfig,
     TextSelector,
@@ -22,7 +23,9 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_AUTO_SEARCH_IP,
     CONF_COMMAND_PATH,
+    CONF_MAC_ADDRESS,
     CONF_SCAN_INTERVAL,
     CONF_SSH_HOST,
     CONF_SSH_KEY_PATH,
@@ -33,6 +36,7 @@ from .const import (
     DEFAULT_SSH_KEY_PATH,
     DEFAULT_SSH_PORT,
     DOMAIN,
+    normalize_mac_address,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,13 +54,18 @@ class TimekpraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Validate connection
-            if await self._async_validate_connection(user_input):
+            mac_address = str(user_input.get(CONF_MAC_ADDRESS, ""))
+            if mac_address and not re.fullmatch(
+                r"[0-9a-f]{12}", normalize_mac_address(mac_address)
+            ):
+                errors["base"] = "invalid_mac"
+            elif await self._async_validate_connection(user_input):
                 return self.async_create_entry(
                     title="Timekpra",
                     data=user_input,
                 )
-            errors["base"] = "cannot_connect"
+            else:
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -75,6 +84,10 @@ class TimekpraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_SSH_PORT, default=22): NumberSelector(
                     NumberSelectorConfig(min=1, max=65535, step=1)
                 ),
+                vol.Optional(CONF_MAC_ADDRESS, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_AUTO_SEARCH_IP, default=True): BooleanSelector(),
             }),
             errors=errors,
         )
@@ -174,8 +187,15 @@ class TimekpraOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
         """Handle options step."""
+        errors = {}
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            mac_address = str(user_input.get(CONF_MAC_ADDRESS, ""))
+            if mac_address and not re.fullmatch(
+                r"[0-9a-f]{12}", normalize_mac_address(mac_address)
+            ):
+                errors["base"] = "invalid_mac"
+            else:
+                return self.async_create_entry(title="", data=user_input)
 
         config_entry = self.config_entry
         return self.async_show_form(
@@ -217,6 +237,21 @@ class TimekpraOptionsFlow(config_entries.OptionsFlow):
                 ): NumberSelector(
                     NumberSelectorConfig(min=1, max=65535, step=1)
                 ),
+                vol.Optional(
+                    CONF_MAC_ADDRESS,
+                    default=config_entry.options.get(
+                        CONF_MAC_ADDRESS, config_entry.data.get(CONF_MAC_ADDRESS, "")
+                    ),
+                ): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(
+                    CONF_AUTO_SEARCH_IP,
+                    default=config_entry.options.get(
+                        CONF_AUTO_SEARCH_IP,
+                        config_entry.data.get(CONF_AUTO_SEARCH_IP, False),
+                    ),
+                ): BooleanSelector(),
                 vol.Required(
                     CONF_SCAN_INTERVAL,
                     default=config_entry.options.get(
@@ -240,4 +275,5 @@ class TimekpraOptionsFlow(config_entries.OptionsFlow):
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
             }),
+            errors=errors,
         )

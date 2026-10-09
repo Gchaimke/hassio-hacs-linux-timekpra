@@ -3,28 +3,36 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.const import Platform
+    from homeassistant.core import HomeAssistant
 
-from .config_flow import TimekpraConfigFlow
-from .const import ACTIVE_CONTROLLER, DOMAIN
-from .controller import TimekpraController
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [
-    Platform.SENSOR,
-    Platform.BINARY_SENSOR,
-    Platform.NUMBER,
-    Platform.BUTTON,
-    Platform.SELECT,
-]
+
+def _get_platforms() -> list[Platform]:
+    """Load Home Assistant platforms only when setting up the integration."""
+    from homeassistant.const import Platform
+
+    return [
+        Platform.SENSOR,
+        Platform.BINARY_SENSOR,
+        Platform.NUMBER,
+        Platform.BUTTON,
+        Platform.SELECT,
+    ]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Linux Timekpra from a config entry."""
+    from .controller import TimekpraController
+
+    platforms = _get_platforms()
     # Prepare config data
     config = dict(entry.data)
     config["entry_id"] = entry.entry_id
@@ -43,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await controller.async_start()
 
     # Forward to platforms
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     # Add listener for options changes
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -71,7 +79,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, _get_platforms()
+    )
 
     if unload_ok:
         controller = hass.data[DOMAIN].pop(entry.entry_id)

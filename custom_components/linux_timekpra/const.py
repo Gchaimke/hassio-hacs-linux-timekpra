@@ -11,6 +11,8 @@ CONF_SSH_KEY_PATH = "ssh_key_path"
 CONF_SSH_PORT = "ssh_port"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_COMMAND_PATH = "command_path"
+CONF_AUTO_SEARCH_IP = "auto_search_ip"
+CONF_MAC_ADDRESS = "mac_address"
 
 # Defaults
 DEFAULT_SSH_PORT = 22
@@ -50,3 +52,8 @@ ACTIVE_CONTROLLER = "active_controller"
 def signal_device_update(entry_id: str) -> str:
     """Return dispatcher signal for a device update."""
     return f"{DOMAIN}_{entry_id}_update"
+
+
+def normalize_mac_address(mac_address: str) -> str:
+    """Return a MAC address without separators in lower case."""
+    return mac_address.replace(":", "").replace("-", "").replace(".", "").lower()

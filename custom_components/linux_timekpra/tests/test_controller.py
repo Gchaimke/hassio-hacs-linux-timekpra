@@ -7,20 +7,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.core import HomeAssistant
-
 from ..const import (
     ATTR_TIME_LEFT_DAY,
     ATTR_TIME_SPENT_DAY,
-    ATTR_TIME_SPENT_MONTH,
-    ATTR_TIME_SPENT_WEEK,
     ATTR_USER,
+    CONF_AUTO_SEARCH_IP,
+    CONF_MAC_ADDRESS,
+    CONF_SSH_HOST,
 )
 from ..controller import TimekpraController
 
 
 @pytest.mark.asyncio
-async def test_controller_connect_success(hass: HomeAssistant, config_entry_data):
+async def test_controller_connect_success(hass, config_entry_data):
     """Test successful SSH connection."""
     controller = TimekpraController(hass, config_entry_data)
 
@@ -39,7 +38,7 @@ async def test_controller_connect_success(hass: HomeAssistant, config_entry_data
 
 
 @pytest.mark.asyncio
-async def test_controller_get_status_success(hass: HomeAssistant, config_entry_data):
+async def test_controller_get_status_success(hass, config_entry_data):
     """Test successful status retrieval."""
     controller = TimekpraController(hass, config_entry_data)
     controller.is_connected = True
@@ -64,7 +63,7 @@ async def test_controller_get_status_success(hass: HomeAssistant, config_entry_d
 
 
 @pytest.mark.asyncio
-async def test_controller_get_status_invalid_json(hass: HomeAssistant, config_entry_data):
+async def test_controller_get_status_invalid_json(hass, config_entry_data):
     """Test status retrieval with invalid JSON."""
     controller = TimekpraController(hass, config_entry_data)
     controller.is_connected = True
@@ -78,7 +77,7 @@ async def test_controller_get_status_invalid_json(hass: HomeAssistant, config_en
 
 
 @pytest.mark.asyncio
-async def test_controller_add_time(hass: HomeAssistant, config_entry_data):
+async def test_controller_add_time(hass, config_entry_data):
     """Test adding screen time."""
     controller = TimekpraController(hass, config_entry_data)
     controller.is_connected = True
@@ -96,7 +95,7 @@ async def test_controller_add_time(hass: HomeAssistant, config_entry_data):
 
 
 @pytest.mark.asyncio
-async def test_controller_block_screen(hass: HomeAssistant, config_entry_data):
+async def test_controller_block_screen(hass, config_entry_data):
     """Test blocking screen."""
     controller = TimekpraController(hass, config_entry_data)
     controller.is_connected = True
@@ -115,7 +114,7 @@ async def test_controller_block_screen(hass: HomeAssistant, config_entry_data):
 
 @pytest.mark.asyncio
 async def test_controller_execute_command_success(
-    hass: HomeAssistant, config_entry_data
+    hass, config_entry_data
 ):
     """Test successful command execution."""
     controller = TimekpraController(hass, config_entry_data)
@@ -136,3 +135,43 @@ async def test_controller_execute_command_success(
         result = await controller.execute_command("test command")
 
         assert result == "command output"
+
+
+@pytest.mark.asyncio
+async def test_controller_discovers_and_persists_changed_host(
+    config_entry_data, caplog
+):
+    """Test a discovered IP is logged and updates the active and stored SSH host."""
+    hass = MagicMock()
+    config_entry_data.update(
+        {
+            CONF_AUTO_SEARCH_IP: True,
+            CONF_MAC_ADDRESS: "00:11:22:33:44:55",
+        }
+    )
+    controller = TimekpraController(hass, config_entry_data)
+    config_entry = MagicMock(options={})
+    ssh_client = MagicMock()
+    hass.async_add_executor_job = AsyncMock(return_value=ssh_client)
+    hass.config_entries.async_get_entry.return_value = config_entry
+
+    with (
+        patch(
+            "custom_components.linux_timekpra.controller.async_find_device_by_mac",
+            new=AsyncMock(return_value="192.0.2.25"),
+        ),
+        patch("custom_components.linux_timekpra.controller.async_dispatcher_send"),
+    ):
+        await controller._async_search_for_host()
+
+    assert controller.ssh_host == "192.0.2.25"
+    assert controller.is_connected is True
+    assert controller._ssh_client is ssh_client
+    assert "Found new IP 192.0.2.25" in caplog.text
+    assert (
+        "Updated stored SSH host address from 192.0.2.10 to 192.0.2.25"
+        in caplog.text
+    )
+    hass.config_entries.async_update_entry.assert_called_once_with(
+        config_entry, options={CONF_SSH_HOST: "192.0.2.25"}
+    )

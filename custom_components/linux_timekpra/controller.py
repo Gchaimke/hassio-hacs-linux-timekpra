@@ -6,6 +6,7 @@ import asyncio
 import json
 import logging
 from pathlib import Path
+import time
 from typing import Any
 
 import paramiko
@@ -21,11 +22,12 @@ from .const import (
     ATTR_TIME_SPENT_MONTH,
     ATTR_TIME_SPENT_WEEK,
     ATTR_USER,
+    CONF_AUTO_SEARCH_IP,
     CMD_ADD_TIME,
     CMD_BLOCK,
     CMD_JSON,
-    CMD_STATUS,
     CONF_COMMAND_PATH,
+    CONF_MAC_ADDRESS,
     CONF_SSH_HOST,
     CONF_SSH_KEY_PATH,
     CONF_SSH_PORT,
@@ -35,8 +37,10 @@ from .const import (
     DOMAIN,
     signal_device_update,
 )
+from .lan_discovery import async_find_device_by_mac
 
 _LOGGER = logging.getLogger(__name__)
+_IP_SEARCH_COOLDOWN = 300
 
 
 def _connect_ssh(config: dict[str, Any]) -> paramiko.SSHClient | None:
@@ -98,6 +102,7 @@ class TimekpraController:
         self.config = config
         self._ssh_client: paramiko.SSHClient | None = None
         self._task: asyncio.Task[None] | None = None
+        self._last_ip_search = 0.0
         self.is_connected = False
         self.pending_add_minutes = 15
         self.data: dict[str, Any] = {
@@ -160,6 +165,70 @@ class TimekpraController:
         self.is_connected = False
         async_dispatcher_send(
             self.hass, signal_device_update(self.config["entry_id"])
+        )
+
+    async def _async_search_for_host(self) -> None:
+        """Find and reconnect to the configured MAC address on the LAN."""
+        mac_address = str(self.config.get(CONF_MAC_ADDRESS) or "")
+        if not self.config.get(CONF_AUTO_SEARCH_IP) or not mac_address:
+            return
+
+        now = time.monotonic()
+        if (
+            self._last_ip_search
+            and now - self._last_ip_search < _IP_SEARCH_COOLDOWN
+        ):
+            return
+        self._last_ip_search = now
+
+        new_host = await async_find_device_by_mac(mac_address, self.ssh_port)
+        if not new_host or new_host == self.ssh_host:
+            if not new_host:
+                _LOGGER.warning(
+                    "Could not find Timekpra host with MAC address %s",
+                    mac_address,
+                )
+            return
+
+        old_host = self.ssh_host
+        _LOGGER.info(
+            "Found new IP %s for Timekpra host with MAC address %s; verifying SSH",
+            new_host,
+            mac_address,
+        )
+        new_config = {**self.config, CONF_SSH_HOST: new_host}
+        ssh_client = await self.hass.async_add_executor_job(
+            _connect_ssh, new_config
+        )
+        if ssh_client is None:
+            _LOGGER.warning(
+                "Could not establish SSH connection to discovered host %s",
+                new_host,
+            )
+            return
+
+        self.config[CONF_SSH_HOST] = new_host
+        self._ssh_client = ssh_client
+        self.is_connected = True
+        async_dispatcher_send(
+            self.hass, signal_device_update(self.config["entry_id"])
+        )
+
+        entry = self.hass.config_entries.async_get_entry(self.config["entry_id"])
+        if entry is None:
+            _LOGGER.error(
+                "Could not persist discovered SSH host %s: config entry %s was not found",
+                new_host,
+                self.config["entry_id"],
+            )
+            return
+
+        new_options = {**entry.options, CONF_SSH_HOST: new_host}
+        self.hass.config_entries.async_update_entry(entry, options=new_options)
+        _LOGGER.warning(
+            "Updated stored SSH host address from %s to %s",
+            old_host,
+            new_host,
         )
 
     async def execute_command(self, command: str) -> str | None:
@@ -261,6 +330,7 @@ class TimekpraController:
                 if not self.is_connected:
                     if not await self.async_connect():
                         _LOGGER.warning("Reconnection attempt failed")
+                        await self._async_search_for_host()
                         await asyncio.sleep(10)
                         continue
 

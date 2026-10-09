@@ -9,6 +9,7 @@ A Home Assistant custom integration for managing screen time on Linux PCs using 
 - 🔒 **Screen Blocking** - Immediately block screen access with a button
 - 🔐 **Secure SSH Connection** - Supports Ed25519 and RSA private keys
 - 🔄 **Auto-reconnection** - Automatically reconnects on connection loss
+- 🔎 **IP rediscovery** - Can find the Linux PC by MAC address when its IP changes
 - 📱 **Flexible UI** - Multiple entity types for different automation scenarios
 
 ## Installation
@@ -48,10 +49,18 @@ A Home Assistant custom integration for managing screen time on Linux PCs using 
    - **SSH Username**: User account for SSH connection (e.g., `ha-control`)
   - **SSH Private Key Path**: Path to your private key in Home Assistant (default: `/config/.ssh/id_ed25519`)
    - **SSH Port**: Usually `22` (default)
+   - **Linux PC MAC Address**: Optional; required to automatically rediscover the PC if its IP changes
+   - **Automatically find the PC if its IP changes**: Enable LAN scanning by the configured MAC address
 
 4. (Optional) Configure advanced settings:
    - **Polling Interval**: How often to check status (default: 30 seconds)
    - **Command Path**: Path to timekpra commands on remote host (default: `/usr/local/bin/ha_timekpra`)
+
+Automatic IP rediscovery requires Home Assistant and the Linux PC to be on the
+same local network, and the PC must keep the configured MAC address on its
+network interface. The integration scans for that MAC only after an SSH
+connection fails, then verifies the discovered address with SSH before saving
+it. You can find the PC's MAC address with `ip link` on Linux.
 
 ### SSH Setup Example
 
@@ -148,6 +157,7 @@ reported by Timekpr-Next into whole minutes:
 
 - Duration values are returned and displayed in minutes. Convert them to seconds in an automation when second-level precision is required.
 - **Timekpra PC Online** - Connection status; `on` means the Linux PC is reachable over SSH
+- **Timekpra Current IP** - Current SSH host address, including LAN-discovered changes
 - **Timekpra User** - Currently monitored user
 - Time sensors keep their last successful values visible while the PC is offline; use **Timekpra PC Online** to check whether those values are current.
 - **Timekpra Time Left Today** - Remaining screen time for today (in minutes)
